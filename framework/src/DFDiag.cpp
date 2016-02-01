@@ -41,6 +41,9 @@
 #include "DFDiag.hpp"
 #include "DevMgr.hpp"
 
+#define MAX_I2C_DEVICES 16
+#define MAX_SPI_DEVICES 16
+
 using namespace DriverFramework;
 
 void DFDiag::listRegisteredDevices()
@@ -60,7 +63,7 @@ void DFDiag::listRawDevices()
 	char devname[15];
 
 	DF_LOG_INFO("I2C devices:");
-	for (unsigned int i=0; i < 8; i++) {
+	for (unsigned int i=0; i < MAX_I2C_DEVICES; i++) {
 #ifdef __QURT
 		sprintf(devname, "/dev/iic-%u", i);
 #else
@@ -77,7 +80,7 @@ void DFDiag::listRawDevices()
 	}
 
 	DF_LOG_INFO("SPI devices:");
-	for (unsigned int i=0; i < 8; i++) {
+	for (unsigned int i=0; i < MAX_SPI_DEVICES; i++) {
 		sprintf(devname, "/dev/spi-%u", i);
 		fd = ::open(devname, O_RDONLY);
 		if (fd != -1) {

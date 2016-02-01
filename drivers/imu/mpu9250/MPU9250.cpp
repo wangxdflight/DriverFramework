@@ -133,7 +133,7 @@
 
 #define MPU_WHOAMI_9250			0x71
 
-#define MPU9250_ONE_G					9.80665f
+#define MPU9250_ONE_G			9.80665f
 
 
 
@@ -264,7 +264,6 @@ int MPU9250::stop()
 		return result;
 	}
 
-
 	usleep(10000);
 
 	DF_LOG_INFO("stopping");
@@ -278,8 +277,6 @@ int MPU9250::stop()
 
 void MPU9250::_measure(void)
 {
-	DF_LOG_INFO("measuring start");
-#if 1
 #pragma pack(push, 1)
 	struct int_status_report {
 		int16_t		accel_x;
@@ -310,8 +307,4 @@ void MPU9250::_measure(void)
 		    float(report.gyro_x) / (32768.0f) * (2000.0f),
 		    float(report.gyro_y) / (32768.0f) * (2000.0f),
 		    float(report.gyro_z) / (32768.0f) * (2000.0f));
-#else
-	usleep(1000);
-#endif
-	DF_LOG_INFO("measuring stop");
 }

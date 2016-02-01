@@ -75,6 +75,18 @@ int ImuTester::run()
 	// Register the driver
 	int ret = m_sensor.init();
 
+	if (ret != 0) {
+		DF_LOG_ERR("IMU init failed");
+		return m_pass;
+	}
+
+	ret = m_sensor.start();
+
+	if (ret != 0) {
+		DF_LOG_ERR("IMU start failed");
+		return m_pass;
+	}
+
 	// Open the IMU sensor
 	DevHandle h;
 	DevMgr::getHandle(IMU_DEVICE_PATH, h);
@@ -114,8 +126,16 @@ int ImuTester::run()
 	//}
 	usleep(1000000);
 
-	DF_LOG_INFO("Closing IMU sensor\n");
+	DevMgr::releaseHandle(h);
+	DF_LOG_INFO("Released Handle\n");
+
+	usleep(1000000);
+
+	DF_LOG_INFO("Stopping IMU sensor\n");
 	m_sensor.stop();
+
+	DF_LOG_INFO("sensor Stopped\n");
+	usleep(1000000);
 	return m_pass;
 }
 
@@ -131,6 +151,8 @@ int do_test()
 	DF_LOG_INFO("Run it");
 	ret = pt.run();
 
+	DF_LOG_INFO("Shutting down\n");
+	usleep(1000000);
 	Framework::shutdown();
 
 	DF_LOG_INFO("Test %s", (ret == ImuTester::TEST_PASS) ? "PASSED" : "FAILED");

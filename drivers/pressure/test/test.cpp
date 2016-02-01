@@ -30,9 +30,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  ****************************************************************************/
+#include <string.h>
 #include <unistd.h>
 #include "DriverFramework.hpp"
 #include "BMP280.hpp"
+
+#define PRESSURE_DEVICE_PATH "/dev/iic-2"
 
 using namespace DriverFramework;
 
@@ -79,13 +82,16 @@ int PressureTester::run()
 	// Register the driver
 	int ret = m_sensor.init();
 
+	char devname[strlen(PRESSURE_CLASS_PATH)+3];
+	snprintf(devname, sizeof(devname), "%s%d", PRESSURE_CLASS_PATH, 0);
+
 	// Open the pressure sensor
 	DevHandle h;
-	DevMgr::getHandle(PRESSURE_DEVICE_PATH, h);
+	DevMgr::getHandle(devname, h);
 	if (!h.isValid())
 	{
 		DF_LOG_INFO("Error: unable to obtain a valid handle for the receiver at: %s (%d)", 
-			PRESSURE_DEVICE_PATH, h.getError());
+			devname, h.getError());
 		m_done = true;
 	}
 	else {

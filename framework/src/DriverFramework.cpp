@@ -37,6 +37,7 @@
 #include <pthread.h>
 #include <errno.h>
 #include <time.h>
+#include <unistd.h>
 #include "DriverFramework.hpp"
 #include "DevObj.hpp"
 #include "DevMgr.hpp"
@@ -169,7 +170,7 @@ static pthread_mutex_t g_framework_exit;
 static pthread_mutex_t g_hrt_lock;
 static pthread_mutex_t g_timestart_lock = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t g_reschedule_cond = PTHREAD_COND_INITIALIZER;
-static pthread_cond_t g_framework_cond = PTHREAD_COND_INITIALIZER;
+static pthread_cond_t g_framework_cond;
 
 static WorkItems *g_work_items = nullptr;
 
@@ -256,15 +257,23 @@ void Framework::shutdown()
 	// Free the HRTWorkQueue resources
 	HRTWorkQueue::finalize();
 
+	DF_LOG_INFO("HRTWorkQueue::finalize done");
+	usleep(1000000);
 	// Free the WorkMgr resources
 	WorkMgr::finalize();
 
+	DF_LOG_INFO("WorkMgr::finalize done");
+	usleep(1000000);
 	// Free the DevMgr resources
 	DevMgr::finalize();
 
+	DF_LOG_INFO("DevMgr::finalize done");
+	usleep(1000000);
 	// allow Framework to exit
 	pthread_mutex_lock(&g_framework_exit);
+	usleep(1000000);
 	pthread_cond_signal(&g_framework_cond);
+	usleep(1000000);
 	pthread_mutex_unlock(&g_framework_exit);
 }
 
@@ -410,19 +419,30 @@ int HRTWorkQueue::initialize(void)
 
 void HRTWorkQueue::finalize(void)
 {
-	DF_LOG_DEBUG("HRTWorkQueue::finalize");
+	DF_LOG_INFO("HRTWorkQueue::finalize");
+	usleep(1000000);
 
 	// Stop the HRT queue thread
 	HRTWorkQueue *wq = HRTWorkQueue::instance();
+	DF_LOG_INFO("TEST0 %p", wq);
+	usleep(1000000);
 	if (wq) {
+		DF_LOG_INFO("TEST1");
+		usleep(1000000);
 		wq->shutdown();
 
+		DF_LOG_INFO("TEST2");
+		usleep(1000000);
 		// Wait for work queue thread to exit
 		pthread_join(g_tid, NULL);
 
+		DF_LOG_INFO("TEST3");
+		usleep(1000000);
 		wq->clearAll();
 		pthread_mutex_destroy(&g_hrt_lock);
 
+		DF_LOG_INFO("TEST4");
+		usleep(1000000);
 		delete wq;
 		wq = nullptr;
 	}

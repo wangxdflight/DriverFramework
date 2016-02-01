@@ -37,7 +37,6 @@
 #include "SyncObj.hpp"
 #include "I2CDevObj.hpp"
 
-#define PRESSURE_DEVICE_PATH "/dev/i2c-2"
 #define PRESSURE_CLASS_PATH  "/dev/pressure"
 
 namespace DriverFramework {
