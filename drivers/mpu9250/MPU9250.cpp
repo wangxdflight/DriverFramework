@@ -54,6 +54,7 @@ int MPU9250::mpu9250_init()
 
 	/* Zero the struct */
 	m_synchronize.lock();
+	DF_LOG_ERR("MPU9250(DF)::mpu9250_init");
 
 	m_sensor_data.accel_m_s2_x = 0.0f;
 	m_sensor_data.accel_m_s2_y = 0.0f;
@@ -207,6 +208,7 @@ int MPU9250::start()
 {
 	/* Open the device path specified in the class initialization. */
 	// attempt to open device in start()
+	DF_LOG_ERR("MPU9250(DF)::start, to start SPIDevObj");
 	int result = SPIDevObj::start();
 
 	if (result != 0) {
@@ -334,6 +336,9 @@ void MPU9250::reset_fifo()
 
 void MPU9250::_measure()
 {
+	static uint32_t measure_counter = 0, overflow_counter = 0;
+	static unsigned int corrupt_counter = 0;
+	measure_counter ++;
 	// Use 1 MHz for normal registers.
 	_setBusFrequency(SPI_FREQUENCY_1MHZ);
 	uint8_t int_status = 0;
@@ -347,11 +352,14 @@ void MPU9250::_measure()
 	}
 
 	if (int_status & BITS_INT_STATUS_FIFO_OVERFLOW) {
+		overflow_counter ++;
+		//DF_LOG_ERR("overflow %d", overflow_counter);
 		reset_fifo();
 
 		m_synchronize.lock();
 		++m_sensor_data.fifo_overflow_counter;
-		DF_LOG_ERR("FIFO overflow");
+
+		//DF_LOG_ERR("FIFO overflow");
 		m_synchronize.unlock();
 
 		return;
@@ -456,16 +464,19 @@ void MPU9250::_measure()
 
 				// Initialize the temperature logic.
 				_last_temp_c = temp_c;
-				DF_LOG_INFO("IMU temperature initialized to: %f", temp_c);
+				//DF_LOG_INFO("IMU temperature initialized to: %f", temp_c);
 				_temp_initialized = true;
 			}
 		} else {
 			// Once initialized, check for a temperature change of more than 2 degrees which
 			// points to a FIFO corruption.
 			if (fabsf(temp_c - _last_temp_c) > 2.0f) {
+                corrupt_counter ++;
+/*
 				DF_LOG_ERR(
 						"FIFO corrupt, temp difference: %f, last temp: %f, current temp: %f",
 						fabs(temp_c - _last_temp_c), (double)_last_temp_c, (double)temp_c);
+*/
 				reset_fifo();
 				_temp_initialized = false;
 				m_synchronize.lock();
@@ -538,6 +549,14 @@ void MPU9250::_measure()
 
 		m_synchronize.signal();
 		m_synchronize.unlock();
+	}
+	if ((measure_counter % (1*5000)) == 0)
+	{
+		DF_LOG_ERR("accel x: %f, y: %f, z: %f, overflow %d, corrupt %d, measure_counter %d\n", 
+			m_sensor_data.accel_m_s2_x, m_sensor_data.accel_m_s2_y, m_sensor_data.accel_m_s2_z, 
+			overflow_counter, corrupt_counter, measure_counter);
+		//DF_LOG_ERR("gyro x: %f, y: %f, z: %f\n", m_sensor_data.gyro_rad_s_x, m_sensor_data.gyro_rad_s_y, m_sensor_data.gyro_rad_s_z);
+		//DF_LOG_ERR("temperature : %f\n", _last_temp_c);
 	}
 }
 

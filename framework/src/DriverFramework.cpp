@@ -385,14 +385,17 @@ int HRTWorkQueue::initialize(void)
 #ifdef __QURT
 	// Try to set a stack size. This stack size is later used in _measure() calls
 	// in the sensor drivers, at least on QURT.
-	const size_t stacksize = 3072;
+	const size_t stacksize = 8192;
 
 	if (pthread_attr_setstacksize(&attr, stacksize) != 0) {
 		DF_LOG_ERR("failed to set stack size of %lu bytes", stacksize);
 		return -2;
 	}
+	attr.priority = 240;
 
+	pthread_attr_setthreadname(&attr,"DF_thread");
 #endif
+	DF_LOG_ERR("HRTWorkQueue::initialize, create DF thread");
 
 	// Create high priority worker thread
 	if (pthread_create(&g_tid, &attr, process_trampoline, NULL)) {
